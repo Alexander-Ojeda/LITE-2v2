@@ -3,7 +3,8 @@ import json
 from datetime import datetime
 from typing import Optional, List
 from core.domain.id_plate import IdPlate
-from core.domain.value_objects import AuditEntry, Location
+from core.domain.value_objects import AuditEntry, Location, TechnicalSpecs
+from core.domain.equipment import Equipment  # Importar Equipment
 from core.ports.repositories import IIdPlateRepository
 from infrastructure.config.settings import AppConfig
 
@@ -45,7 +46,7 @@ class JsonIdPlateRepository(IIdPlateRepository):
         ]
     
     def _entity_to_dict(self, id_plate: IdPlate) -> dict:
-        return {
+        data = {
             "id": id_plate.id,
             "client_id": id_plate.client_id,
             "status": id_plate.status,
@@ -57,6 +58,21 @@ class JsonIdPlateRepository(IIdPlateRepository):
             "notes": id_plate.notes,
             "audit_log": [entry.to_dict() for entry in id_plate.audit_log]
         }
+        
+        # Añadir información del equipo si existe
+        if id_plate.equipment:
+            data["equipment"] = {
+                "brand": id_plate.equipment.brand,
+                "model": id_plate.equipment.model,
+                "variant": id_plate.equipment.variant,
+                "category": id_plate.equipment.category,
+                "subcategory": id_plate.equipment.subcategory,
+                "technical_specs": id_plate.equipment.technical_specs.values
+            }
+        else:
+            data["equipment"] = None
+            
+        return data
     
     def _dict_to_entity(self, data: dict) -> IdPlate:
         location = None
@@ -84,5 +100,18 @@ class JsonIdPlateRepository(IIdPlateRepository):
             )
             for entry in data["audit_log"]
         ]
+        
+        # Restaurar equipo si existe
+        if data.get("equipment") and data["equipment"] is not None:
+            eq_data = data["equipment"]
+            equipment = Equipment(
+                brand=eq_data["brand"],
+                model=eq_data["model"],
+                variant=eq_data["variant"],
+                category=eq_data["category"],
+                subcategory=eq_data["subcategory"],
+                technical_specs=TechnicalSpecs(eq_data["technical_specs"])
+            )
+            id_plate.equipment = equipment
         
         return id_plate

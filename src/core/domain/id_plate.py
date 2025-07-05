@@ -73,3 +73,14 @@ class IdPlate:
             "NOTES_UPDATED",
             "Notas actualizadas"
         )
+        
+    def get_audit_history(self, limit: int = None) -> List[AuditEntry]:
+        """Obtiene el historial de auditoría ordenado por fecha"""
+        sorted_audit = sorted(self.audit_log, key=lambda x: x.timestamp, reverse=True)
+        return sorted_audit[:limit] if limit else sorted_audit
+    
+    def get_last_action(self) -> Optional[AuditEntry]:
+        """Obtiene la última acción realizada"""
+        if not self.audit_log:
+            return None
+        return max(self.audit_log, key=lambda x: x.timestamp)
