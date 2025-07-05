@@ -84,3 +84,20 @@ class IdPlate:
         if not self.audit_log:
             return None
         return max(self.audit_log, key=lambda x: x.timestamp)
+    
+    def add_photo(self, filename: str):
+        """Añade una foto a la placa"""
+        self.photos.append(filename)
+        self.add_audit_entry(
+            "PHOTO_ADDED",
+            f"Foto añadida: {filename}"
+        )
+    
+    def remove_photo(self, filename: str):
+        """Elimina una foto de la placa"""
+        if filename in self.photos:
+            self.photos.remove(filename)
+            self.add_audit_entry(
+                "PHOTO_REMOVED",
+                f"Foto eliminada: {filename}"
+            )

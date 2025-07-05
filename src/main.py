@@ -7,6 +7,7 @@ from core.application.use_cases.catalog.add_subcategory import AddSubcategoryCom
 from core.application.use_cases.catalog.add_brand import AddBrandCommand
 from core.application.use_cases.catalog.add_model import AddModelCommand
 from core.application.use_cases.client.generate_client_report import GenerateClientReportCommand
+from core.application.use_cases.id_plate.add_photos import AddPhotosToIdPlateCommand
 
 system = initialize_system()
 
@@ -110,3 +111,39 @@ for location, count in report["id_plates_by_location"].items():
 print("\nÚltimas auditorías:")
 for audit in report["recent_audits"]:
     print(f"[{audit['timestamp']}] {audit['plate_id']}: {audit['action']} - {audit['details']}")
+    
+# Crear una foto de prueba
+import tempfile
+from pathlib import Path
+
+# Crear una imagen de prueba
+with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_photo:
+    temp_photo.write(b"fake image data")
+    temp_photo_path = temp_photo.name
+
+print(f"Ruta temporal de foto: {temp_photo_path}")
+
+# Añadir fotos a la placa
+result = system.add_photos_use_case.execute(
+    AddPhotosToIdPlateCommand(
+        plate_id=id_plate.id,
+        client_id="RKUK",
+        photo_paths=[temp_photo_path]
+    )
+)
+
+print(f"Fotos añadidas: {result['saved_photos']}")
+print(f"Total fotos ahora: {result['total_photos']}")
+
+# Listar fotos de la placa
+photo_service = system.photo_service
+photos = photo_service.list_plate_photos("RKUK", id_plate.id)
+print(f"Fotos almacenadas: {photos}")
+
+# Obtener ruta de una foto
+if photos:
+    photo_path = photo_service.get_photo_path("RKUK", id_plate.id, photos[0])
+    print(f"Ruta completa de foto: {photo_path}")
+
+# Limpiar archivo temporal
+Path(temp_photo_path).unlink()    

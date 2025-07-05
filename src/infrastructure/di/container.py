@@ -12,10 +12,15 @@ from core.application.use_cases.catalog.add_brand import AddBrandUseCase
 from core.application.use_cases.catalog.add_model import AddModelUseCase
 from core.application.use_cases.client.generate_client_report import GenerateClientReportUseCase
 from infrastructure.config.settings import AppConfig
+from infrastructure.services.photo_service import PhotoService
+from core.application.use_cases.id_plate.add_photos import AddPhotosToIdPlateUseCase
 
 class Container:
     def __init__(self):
         self.config = AppConfig()
+        
+        # Servicios
+        self.photo_service = PhotoService(self.config)
         
         # Initialize repositories
         self.client_repository: IClientRepository = JsonClientRepository(self.config)
@@ -56,4 +61,10 @@ class Container:
         self.generate_client_report_use_case = GenerateClientReportUseCase(
             client_repo=self.client_repository,
             id_plate_repo=self.id_plate_repository
+        )
+        
+        # Nuevo caso de uso para fotos
+        self.add_photos_use_case = AddPhotosToIdPlateUseCase(
+            id_plate_repo=self.id_plate_repository,
+            photo_service=self.photo_service
         )
